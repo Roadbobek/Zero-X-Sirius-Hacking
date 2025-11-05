@@ -1,0 +1,1 @@
+This script sends a emergency stop packet to the drone pretending to be the original controller (my phone). It requires the Scapy Python package and the specified WiFi interface (wlan0mon) to be in monitor mode for packet injection.

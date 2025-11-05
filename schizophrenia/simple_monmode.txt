@@ -1,0 +1,11 @@
+sudo airmon-ng check kill 
+sudo airmon-ng start wlan0
+
+sudo iwconfig wlan0mon channel NUMBER
+
+sudo airmon-ng stop wlan0mon
+sudo service NetworkManager start
+
+
+sudo tshark -i wlan0mon -c 1000
+

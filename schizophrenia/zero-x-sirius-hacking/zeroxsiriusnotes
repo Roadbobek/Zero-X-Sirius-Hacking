@@ -1,0 +1,87 @@
+zero-x sirius drone
+essid(s): ZX-SIR-0EF36D, cmd=30EF36D, cmd=20EF36D
+bssid/mac: C4:D7:FD:0E:F3:6D
+channel: 4
+
+my samsung z-fold 5
+mac address: CA:A9:96:5B:50:05 
+
+sudo airmon-ng check kill
+sudo airmon-ng start wlan0
+
+iwconfig wlan0mon
+
+sudo airodump-ng wlan0mon
+
+sudo airodump-ng -c 4 wlan0mon or? >>> sudo iwconfig wlan0mon channel 4
+sudo airodump-ng --bssid C4:D7:FD:0E:F3:6D -w zeroxsiriusfullcapture wlan0mon
+or >>>
+sudo airodump-ng --bssid C4:D7:FD:0E:F3:6D -c 4 -w zeroxsiriusfullcapture wlan0mon
+
+filter phone to drone traffic: wlan.sa == CA:A9:96:5B:50:05  && wlan.da == C4:D7:FD:0E:F3:6D
+phone to drone udp 8800 control: ip.addr == 192.168.169.2 and udp.port == 8800
+filter traffic live
+filter phone and drone with just possible controll traffic live: 
+wlan.addr == CA:A9:96:5B:50:05 and wlan.addr == C4:D7:FD:0E:F3:6D and udp.port == 8800
+filter drone traffic live:
+wlan.addr == C4:D7:FD:0E:F3:6D
+filter drone traffic isolating possible commands:
+wlan.addr == C4:D7:FD:0E:F3:6D and udp.port == 8800
+okay now i know udp port 8800 is not the controlls its sending over 100 packets per second meaning its likely telementary so we are going to exclude it now:
+wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800
+data sent from phone to drone on udp port 8800 is likely telementary and can be ignored for commands, data is sent there whenever the phone has the mobile app open and connected and not if just connected to drones wifi, the data stream stays consistant then.
+there is also an other data stream with the same characteristics except the data is sent from the drone to the phone and the length stays at 1080 consistantly, the data is only sent when the app is open and connected. but the port is randomised at connection so the data will be sent a the same port 40k-60k while connected but if you minimise the app the data stops and when you reopen the app the data starts again but with a new similar port, i think this is the video.
+now to filter out telementary data sent to drone and video sent from drone we use:
+wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800 and not udp.port == 59453
+replacing 59453 with the set port since it changes.
+now like 99 percent of the data are ack acknowledgments so to filter those out we will use:
+not wlan.fc.type_subtype == 0x000d
+combining it:
+wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800 and not udp.port == 59453 and not wlan.fc.type_subtype == 0x000d
+okay well that didnt work so i simply just right clicked on one of the ack packets 70 Acknowledgement Flags=.......C for eg and selected apply as filter > ... and not selected:
+(wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800 and not udp.port == 59453) && !(_ws.col.info == "Acknowledgement, Flags=........C")
+then i did the same for all the 76 request-to-send packets:
+((wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800 and not udp.port == 59453) && !(_ws.col.info == "Acknowledgement, Flags=........C")) && !(_ws.col.info == "Request-to-send, Flags=........C")
+then did the same for all the 88 block ack packets:
+(((wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800 and not udp.port == 59453) && !(_ws.col.info == "Acknowledgement, Flags=........C")) && !(_ws.col.info == "Request-to-send, Flags=........C")) && !(_ws.col.info == "802.11 Block Ack, Flags=........C")
+did same for all 88 qos null func no data:
+((((wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800 and not udp.port == 59453) && !(_ws.col.info == "Acknowledgement, Flags=........C")) && !(_ws.col.info == "Request-to-send, Flags=........C")) && !(_ws.col.info == "802.11 Block Ack, Flags=........C")) && !(_ws.col.info == "QoS Null function (No data), SN=1130, FN=0, Flags=....R..TC")
+there was still some so i did it again:
+(((((wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800 and not udp.port == 59453) && !(_ws.col.info == "Acknowledgement, Flags=........C")) && !(_ws.col.info == "Request-to-send, Flags=........C")) && !(_ws.col.info == "802.11 Block Ack, Flags=........C")) && !(_ws.col.info == "QoS Null function (No data), SN=1130, FN=0, Flags=....R..TC")) && !(_ws.col.info == "QoS Null function (No data), SN=1961, FN=0, Flags=.......TC")
+i just realised that SN= increments by 1 each time its sent so thats useless:
+(((wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800 and not udp.port == 59453) && !(_ws.col.info == "Acknowledgement, Flags=........C")) && !(_ws.col.info == "Request-to-send, Flags=........C")) && !(_ws.col.info == "802.11 Block Ack, Flags=........C")
+filter out dns queries from phone
+(((wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800 and not udp.port == 59453 and not dns) && !(_ws.col.info == "Acknowledgement, Flags=........C")) && !(_ws.col.info == "Request-to-send, Flags=........C")) && !(_ws.col.info == "802.11 Block Ack, Flags=........C")
+im going to strip down the filtering
+wlan.addr == C4:D7:FD:0E:F3:6D and not udp.port == 8800 and not dns
+instead of filtering data on the drones mac addr c4:d7:fd ect lets filter incoming from phone
+wlan.sa == CA:A9:96:5B:50:05 and not udp.port == 8800 and not dns
+with that i am getting consistantly 1 tcp syn, then around 5-7 86 qos null function packets, with some other stuff and when i controll the drone there isnt any change meaning the controll functionaality isnt here and could be in udp port 8800 even tho it sends data consistantly the controlls could be in the telementary/heartbeak?
+since data on udp port 8800 is sent from phone .2 to drone .1 we can simply just use this filter:
+udp.port == 8800
+the data stream is consistant if im idle or controlling it.
+viewing the raw hex data i cant really tell any patters or differences when i do anything it allseams random, its not live and when i click on a packet i see m.......d......3....ect, looking for a way to see it live i tried holding page down and its live but it still shows m....d....3...ect, but if you right click the columns, select Column Preferences, add a column with the + button, title = Delta, type = Custom, fields = data.data and adjust the widths you can see the raw hex data live in one line without spaces.
+with that discovery you are able to see each change, i can see some values increment when idle and some dont change but when i do something on the phone i can see the before static data change!
+i made a python script to sort the wireshark output (export packet discection as plain text) and then i made one to view the differences.
+on tcp.port == 18881 there are tcp syyn packets heading to the drone from the phone for connection lets remember that.
+filter all data from phone to udp 18881 ONLY with data len:
+ip.src == 192.168.169.2 and tcp.port == 18881 and tcp.flags.push == 1
+from connect to disconnect there is no data on any packet in ip.src == 192.168.169.2 and tcp.port == 18881 so connectoin is not there.
+when clicking start on the app and filtering on
+udp.port == 8801
+i can see a udp packet to the drone and it gives back a icmp packet
+
+
+
+sudo aireplay-ng -2 -r zero_x_sirus_1-01.cap -h ca:a9:96:5b:50:05 wlan0mon
+sudo aireplay-ng -2 -r zero_x_sirus_1-01.cap -h ca:a9:96:5b:50:05 -d c4:d7:fd:0e:f3:6d wlan0mon  
+sudo aireplay-ng -1 0 -a C4:D7:FD:0E:F3:6D -r zero_x_sirus_1-01.cap -h ca:a9:96:5b:50:05 wlan0mon
+
+stop monitor mode
+sudo airmon-ng stop wlan0mon
+enable regular interface
+sudo ifconfig wlan0 up
+enable network manager
+service NetworkManager start
+or try
+sudo service network-manager start

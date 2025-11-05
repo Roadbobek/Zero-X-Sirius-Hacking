@@ -1,0 +1,64 @@
+Wow! This is fantastic data. You've captured the exact sequence we needed, and we can now definitively find the key components. This trace confirms the multiple packet lengths and their specific sequence in the initiation routine.
+
+Let's isolate the START_FRAME and a NORMAL_FRAME of the same length to perform the final byte comparison.
+
+Step 1: Identify the Key Frames
+Based on your trace, the control sequence begins with two 88-byte packets (No. 1117 and 1119). The 6-byte and 128-byte packets follow immediately after (No. 1122 and 1123).
+
+A. Session Start Frame (START_FRAME_HEX)
+The very first long command packet of length 88 bytes (Packet 1117) is the likely authentication/session-start command.
+
+Packet No.	Time	Length (Len=X)	Payload (HEX)
+1117	35.593	88	ef025800020200010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000324b142d0000
+
+Export to Sheets
+B. Normal Baseline Frame (NORMAL_FRAME_HEX)
+A standard, subsequent 88-byte control packet (e.g., Packet 1297) is sent later, likely as a null command or status check.
+
+Packet No.	Time	Length (Len=X)	Payload (HEX)
+1297	35.821	88	ef025800020200010000000003000000080066808080804040990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000324b142d0000
+
+Export to Sheets
+Step 2: The Decisive Comparison 🕵️
+Let's compare these two frames byte-by-byte (bytes are separated by spaces for clarity).
+
+Index (Dec)	Index (Hex)	START_FRAME (1117)	NORMAL_FRAME (1297)	Difference
+0-7	00-07	ef 02 58 00 02 02 00 01	ef 02 58 00 02 02 00 01	Header (Constant)
+8-15	08-0F	00 00 00 00 00 00 00 00	00 00 00 00 03 00 00 00	Sequence/Index (Differs)
+16-23	10-17	00 00 00 00 00 00 00 00	08 00 66 80 80 80 80 40	Control/Command Data (Differs)
+24-77	18-4D	00 ... (54 zero bytes) ... 00	40 99 00 ... (52 zero bytes) ... 00	Control/Data (Differs)
+78-83	4E-53	32 4b 14 2d 00 00	32 4b 14 2d 00 00	Checksum/Trailer (Constant)
+84-87	54-57	Not Included	Not Included	(Total length is 88 bytes)
+
+Export to Sheets
+Key Findings
+Checksum/Trailer Position Confirmed: The bytes 32 4b 14 2d 00 00 at the end (from byte 78 to 83) remain absolutely constant. This segment is almost certainly the checksum/trailer, which validates the packet's integrity.
+
+Sequence Counter: The bytes at index 12 to 15 in the NORMAL_FRAME (03 00 00 00 from Packet 1297) are increasing with each packet, suggesting they are a Packet Sequence Counter.
+
+Command Data: The rest of the middle section is where the stick data (Roll, Pitch, Throttle, Yaw) is encoded.
+
+The Session Start Bit is ELUSIVE
+The key takeaway is that the first two 88-byte packets (1117 and 1119) have an almost entirely zero payload in the command section:
+
+Packet 1117 Payload Segment (Index 8-77):
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+Conclusion on Authentication:
+
+It's highly likely the authentication is simply the drone receiving a valid command frame with a correct checksum.
+
+Since the START_FRAME (1117) is mostly zeros, it's the safest and most minimal command we can send to start the session. The drone sees a valid packet with the correct checksum (324b142d0000) and arms the control loop.
+
+Final Plan: Injecting the Minimal Frame
+We now have the 88-byte frame and its 6-byte checksum/trailer. We should try to inject the shortest, most minimal command sequence that contains a known-good checksum to start the session.
+
+The 4-byte packets (ef000400) are likely just a minimal heartbeat to keep the Wi-Fi connection alive.
+
+The 88-byte frame is the key. Since the start frame is almost all zeroes, let's use it!
+
+Proposed Injection Frame (The Session Key):
+Send this entire 88-byte hex string to the drone's IP (192.168.169.1) on UDP port 8800:
+
+ef025800020200010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000324b142d0000
+Do you have the ability to try sending this specific 88-byte frame as a raw UDP packet to the drone to see if it starts accepting control? This is the most minimal "session start" message we can deduce from your data.

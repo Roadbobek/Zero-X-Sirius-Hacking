@@ -1,0 +1,6 @@
+
+BSSID, First time seen, Last time seen, channel, Speed, Privacy, Cipher, Authentication, Power, # beacons, # IV, LAN IP, ID-length, ESSID, Key
+C4:D7:FD:0E:F3:6D, 2025-09-29 12:18:39, 2025-09-29 12:18:46,  4,  65, OPN, ,   , -26,       67,        0,   0.  0.  0.  0,  11, cmd=30EF36D, 
+
+Station MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs
+

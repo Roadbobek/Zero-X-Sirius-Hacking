@@ -1,0 +1,52 @@
+can you please fix this script, 
+this is the output for linux:
+
+└─$ python3 indevwapmon.py -a -l 
+ --- Simple Wi-Fi Access Point Monitor Initializing --- 
+ [01:09:04] INFO: File logging enabled (-l/--log). Event history saved to: wap_monitor.log 
+ [01:09:04] INFO: Alarms enabled (--alarm/-a). 
+ [01:09:04] INFO: Polling every 0.5s. Press Ctrl+C to stop. 
+ [01:09:05] INFO: WAP Monitor initialized successfully. 
+ [01:09:05] INFO: Monitoring started with 8 initial WAPs in cache. 
+ ---------------------------------------------------------------------------------------------------- 
+ --- Initial WAP Cache Content (8 WAPs Detected) --- 
+ BSSID                SSID                           Signal     Channel    Band       Auth            
+ ---------------------------------------------------------------------------------------------------- 
+ 38\                  06:E6:64:2F:43:OPTUS_642F40N   27%        11         N/A        N/A             
+ 08\                  36:C9:1F:B0:48:                15%        157        N/A        N/A             
+ 8C\                  3B:AD:F1:CD:D2:NETGEAR48       25%        13         N/A        N/A             
+ 00\                  60:64:FA:FB:CC:NetComm 2301    29%        11         N/A        N/A             
+ 3E\                  60:F9:81:41:2B:WiFi-81412A     20%        2          N/A        N/A             
+ DC\                  62:79:BC:C6:9B:WiFi-BCC69B     55%        2          N/A        N/A             
+ 52\                  68:93:ED:5E:02:                20%        48         N/A        N/A             
+ 30\                  68:93:ED:5E:02:Delta Pink      19%        48         N/A        N/A             
+ ---------------------------------------------------------------------------------------------------- 
+
+
+ [01:09:18] ** 2 NEW WAPs detected: ** 
+ [01:09:18] ALERT: [NEW] BSSID: 4E\ | SSID: AE:30:1D:09:F4:WiFi-1D09F3 | Sig: 17% | Ch: 1 | Auth: N/A 
+ [01:09:18] ALERT: [NEW] BSSID: 10\ | SSID: 2C:B1:DE:A2:1D: | Sig: 19% | Ch: 1 | Auth: N/A 
+
+
+ [01:09:34] ** 1 NEW WAP detected: ** 
+ [01:09:34] ALERT: [NEW] BSSID: A8\ | SSID: FB:40:C7:BC:EE:NOKIA-BCE3 | Sig: 27% | Ch: 6 | Auth: N/A 
+
+
+ [01:09:42] ** 1 WAP removed: ** 
+ [01:09:42] ALERT: [GONE] BSSID: 08\ | Last known SSID: 36:C9:1F:B0:49:Madhouse 
+ ^C[01:09:43] INFO: Monitor stopped by user (Ctrl+C). Goodbye! 
+
+
+
+
+ You can see here:
+
+
+ bssid/mac          ssid/name 
+ 38\                  06:E6:64:2F:43:OPTUS_642F40N 
+
+
+ its messed up, can you fix this:
+
+
+

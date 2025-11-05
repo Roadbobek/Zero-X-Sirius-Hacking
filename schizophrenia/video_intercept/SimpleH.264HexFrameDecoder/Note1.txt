@@ -1,0 +1,25 @@
+VIDEO STREAM FRAGMENTATION ANALYSIS FINDINGS
+Current Findings in the Network Data (SOLVED)
+We have successfully identified the key markers used for reassembling the video fragments into complete H.264 frames.
+
+--------------------------------
+Data Component
+Location (0-Based Byte)
+Size
+Purpose
+--------------------------------
+Frame ID -----------------------
+Byte 8 and Byte 9 (e.g., B8 85)
+2 Bytes
+Unites all fragments belonging to the same single picture.
+Fragment Index -----------------
+Byte 32
+1 Byte
+Specifies the correct sequential order of the fragments (00, 01, 02, 03...) within a single Frame ID, allowing for full frame reassembly.
+--------------------------------
+
+What We Need Next (The Missing Configuration)
+The next major step is to locate the H.264 Header NAL Units (SPS and PPS).
+These packets contain the video's essential configuration data (like the resolution, color space, and compression settings). Without them, a video player cannot initialize the decoder, even if the raw frame data is reassembled correctly.
+
+Action Required: The next step for the automated script is to use the confirmed Fragment Index (Byte 32, 1 Byte long) to reassemble the complete stream, and then search the resulting data stream for the SPS/PPS header signatures.

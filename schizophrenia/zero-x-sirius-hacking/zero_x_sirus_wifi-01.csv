@@ -1,0 +1,9 @@
+
+BSSID, First time seen, Last time seen, channel, Speed, Privacy, Cipher, Authentication, Power, # beacons, # IV, LAN IP, ID-length, ESSID, Key
+C4:D7:FD:0E:F3:6D, 2025-09-28 14:09:15, 2025-09-28 14:41:55,  4,  65, OPN, ,   , -44,    19113,   268462, 192.168.  1.102,  11, cmd=30EF36D, 
+
+Station MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs
+E6:DD:F3:BC:0D:8F, 2025-09-28 14:09:15, 2025-09-28 14:18:10, -66,   224635, C4:D7:FD:0E:F3:6D,ZX-SIR_0EF36D
+0E:CC:AD:BF:DC:84, 2025-09-28 14:09:25, 2025-09-28 14:41:45, -38,      391, C4:D7:FD:0E:F3:6D,
+CA:A9:96:5B:50:05, 2025-09-28 14:35:15, 2025-09-28 14:41:55, -38,    50155, C4:D7:FD:0E:F3:6D,cmd=30EF36D
+

@@ -1,0 +1,53 @@
+**Comprehensive Analysis of `vidcap.csv` Data Stream**
+
+**Objective:** Understand the structure of the UDP video stream from the Zero-X Sirius drone to correctly extract H.264 video frames.
+
+**1. File and Packet Overview**
+
+*   **File Format:** The file is a standard CSV export from Wireshark. The crucial columns are "Source", "Info", and "Delta" (which contains the packet's data payload).
+*   **Packet Sources:**
+    *   `192.168.169.1`: The drone. This is the source of the video data packets.
+    *   `192.168.169.2`: The receiver (phone/controller). Packets from this source appear to be small acknowledgment or control packets and are not part of the video data itself.
+*   **Packet Filtering:** The primary focus should be on packets originating from the drone's IP (`192.168.169.1`).
+
+**2. Data Payload Analysis (`Delta` Column)**
+
+*   **Format:** The data in this column is a string that starts with a Wireshark-specific artifact for non-printable characters (`[â\200\246]`) followed by the packet's payload represented as a hexadecimal string.
+*   **Reliable Extraction Method:** A robust method is to find the known, consistent starting marker of the drone's payload. All video packets begin with the hex sequence `9301`. The script should locate this marker and extract all subsequent characters, ensuring the resulting string is clean and has an even length before attempting to convert it to bytes.
+
+**3. Video Packet Header Structure**
+
+Based on the hex data provided, each video packet from the drone contains a custom header before the raw H.264 data. The header is 42 bytes long.
+
+*   **Bytes 0-7 (`9301380402020001`):** A static prefix or contains metadata that does not appear to change frequently.
+*   **Byte 8 (e.g., `02`, `03`): Frame Number.**
+    *   This byte represents the main frame number.
+*   **Bytes 9-31:** Other metadata. This section includes long strings of zeros and a few other bytes.
+*   **Bytes 32-35 (e.g., `3c000000`): Part Number.**
+    *   This is a 4-byte little-endian integer that indicates the sequence of the packet within a single frame.
+*   **Bytes 36-41:** More metadata before the payload begins.
+
+**4. Final Breakthrough: The Hidden Offset**
+
+*   **Final Diagnostic:** A more advanced diagnostic script (`analyse_capture.py`) was used to scan for valid H.264 NAL unit headers at various offsets *after* the initial 42-byte drone header.
+*   **The Discovery:** The script produced a clear result:
+    ```
+    Offset | NAL Types Found
+    -------------------------------------------------------------
+    2      | { 1, 5, 6, 7, 8 }
+    ```
+*   **Conclusion:** This definitively proves that the actual H.264 NAL unit data begins **2 bytes after** the 42-byte drone header. There is a 2-byte unknown spacer. Therefore, the total header that must be stripped from every packet is **44 bytes**.
+
+**5. The Final Bug: Implementation Flaw**
+
+*   **The Contradiction:** The `analyse_capture.py` script proved that valid NAL types (1, 5, 7, 8) exist at the 44-byte offset. However, the extractor script repeatedly failed, reporting it only ever found NAL type 0.
+*   **Resolution:** The complex frame reassembly logic in the extractor script contained a subtle bug that prevented it from correctly processing the stream when it encountered unexpected NAL unit types (like type 0). The theory was correct, but the implementation was flawed.
+
+**6. Final Extraction Logic: The "Direct" Approach**
+
+To bypass the implementation bug, the final script will use a much simpler, more direct approach:
+1.  For each packet from the drone, strip the first **44 bytes** to get the true H.264 NAL unit payload.
+2.  Prepend the H.264 start code (`0x00000001`) to this payload.
+3.  Write the resulting data directly to a single output file (`video.h264`).
+
+This method ignores frame numbers and packet loss, assembling the NAL units in the exact order they were received. This is the most robust way to create a playable stream from the available data.

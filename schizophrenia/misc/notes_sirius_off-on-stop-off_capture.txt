@@ -1,0 +1,1 @@
+wireshark was scanning the data and the app was open and connected, I enabled control mode then pressed Stop then disabled control mode, (OFF -> ON -> STOP -> OFF).
