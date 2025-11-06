@@ -15,6 +15,8 @@ When connected to the drone's 2.4ghz WiFi wireless access point, on the app's co
 
 When the mobile device is connected to the drone's wireless access point, the app is open and control mode is on (the ON and OFF button) the drone receives control data packets from the mobile device on port 8800 through UDP. This port is used for all commands issued to the drone.
 
+The mobile device continuously sends packets to the drone, any commands will appear there. But there are always packets even if not issuing commands.
+
 When the app is connected to the drone, the drone's video feed is received by the mobile device on port 1234 through UDP.
 
 The video feed is transmitted live as a H.264 encoded video stream, which is also known as Advanced Video Coding (AVC). It seems to follow this structure seen in vidcap.png, the first inner column is the frame number and the second column is the frame part, since the entire frame isn't transmitted in one packet.
